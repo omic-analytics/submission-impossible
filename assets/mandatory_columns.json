@@ -1,0 +1,36 @@
+{
+    "mandatory_columns": [
+        {
+            "lab_id": [
+                "RITM Lab ID",
+                "RITM LAB ID"
+            ]
+        },
+        {
+            "sequencing_id": [
+                "SEQUENCING ID"
+            ]
+        },
+        {
+            "barcode": [
+                "BARCODE"
+            ]
+        },
+        {
+            "collection_date": [
+                "DATE OF COLLECTION (MM-DD-YYYY)"
+            ]
+        },
+        {
+            "DRU": [
+                "DRU"
+            ]
+        },
+        {
+            "sample_type": [
+                "SAMPLE TYPE",
+                "SPLE TYPE"
+            ]
+        }
+    ]
+}
