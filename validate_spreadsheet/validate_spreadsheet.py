@@ -12,6 +12,9 @@ barcodes_ont_file = sys.argv[3]
 # Read in the spreadsheet
 sheet_df = pd.read_excel(f'{input}', sheet_name=sheet_name)
 barcodes_ont_df = pd.read_csv(f'{barcodes_ont_file}', sep='\t', header=0)
+print('sheet_df is: ', sheet_df)
+print('barcodes_ont_df is: ', barcodes_ont_df)
+
 
 # Read in the json file
 with open('assets/mandatory_columns.json') as f:
@@ -46,19 +49,26 @@ def manda_cols_inside_sheet(df):
     if len(missing_cols) == 0:
         print(f'There are no missing columns: {missing_cols}')
         print(f'matching_cols: {matching_cols}')
-        return matching_cols
+        return True, matching_cols, missing_cols
     else:
         print(f'There are missing columns: {missing_cols}')
-        return False
+        return False, matching_cols, missing_cols
 
 
 # Function to validate that no barcodes from barcodes_ont_df are missing from the sheet's barcode column
 def no_missing_barcodes(sheet_df, barcodes_ont_df, mandatory_matches):
-    print('mandatory_matches is: ', mandatory_matches)
-    print('Barcodes in sheet_df are: ', sheet_df[mandatory_matches['barcode']])
-    print('Barcodes in barcodes_ont_df are: ', barcodes_ont_df['barcode'])
-    # FIXME: Get integer values of barcodes to match between the two dataframes.
+    sheet_barcodes = sheet_df[mandatory_matches['barcode']].dropna(axis=0).apply(lambda x: re.search(r'\d+', x))
+    ont_barcodes = barcodes_ont_df['barcode'].dropna(axis=0).apply(lambda x: re.search(r'\d+', x).group())
 
+    print('Barcodes in sheet_df are: ', sheet_barcodes)
+    print('Barcodes in barcodes_ont_df are: ', ont_barcodes)
+
+    # FIXME: Check if all ont_barcodes are in sheet_barcodes, convert to integers to compare.
+    missing_barcodes = set(ont_barcodes) - set(sheet_barcodes)
+    if len(missing_barcodes) == 0:
+        return True, missing_barcodes
+    else:
+        return False, missing_barcodes
 
 # Report unnamed columns in sheet_df
 def count_unnamed_cols(df):
@@ -71,17 +81,21 @@ def report_validity():
     print('--------------------------------')
     print('REPORT: Number of unnamed columns: ', count_unnamed_cols(sheet_df))
 
-    mandatory_matches = manda_cols_inside_sheet(sheet_df)
+    all_manda_matched, mandatory_matches, missing_cols = manda_cols_inside_sheet(sheet_df)
+    no_barcode_missed, missing_barcodes = no_missing_barcodes(sheet_df, barcodes_ont_df, mandatory_matches)
 
-    if mandatory_matches:
+    if all_manda_matched:
         print('REPORT: Mandatory columns are complete')
+        print(mandatory_matches)
     else:
         print('REPORT: Mandatory columns are incomplete')
+        print(missing_cols)
 
-    if no_missing_barcodes(sheet_df, barcodes_ont_df, mandatory_matches):
+    if no_barcode_missed:
         print('REPORT: All barcodes are present')
     else:
         print('REPORT: Some barcodes are missing')
+        print(missing_barcodes)
 
 
 report_validity()
